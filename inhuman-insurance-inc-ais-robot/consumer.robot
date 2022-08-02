@@ -15,9 +15,25 @@ Process traffic data
     ${payload}=    Get Work Item Payload
     ${traffic_data}=    Set Variable    ${payload}[${WORK_ITEM_NAME}]
     ${valid}=    Validate traffic data    ${traffic_data}
+    IF    ${valid}    Post traffic data to sales system    ${traffic_data}
 
 Validate traffic data
     [Arguments]    ${traffic_data}
     ${country}=    Get Value From Json    ${traffic_data}    $.country
     ${valid}=    Evaluate    len("${country}") == 3
     RETURN    ${valid}
+
+Post traffic data to sales system
+    [Arguments]    ${traffic_data}
+    ${status}    ${return}=    Run Keyword And Ignore Error
+    ...    POST
+    ...    https://robocorp.com/inhuman-insurance-inc/sales-system-api
+    ...    json=${traffic_data}
+    Handle traffic API response    ${status}
+
+Handle traffic API response
+    [Arguments]    ${status}
+    IF    "${status}" == "PASS"    Handle traffic API OK response
+
+Handle traffic API OK response
+    Release Input Work Item    DONE
